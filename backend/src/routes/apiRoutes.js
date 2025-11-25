@@ -4,6 +4,7 @@ import {
   getQuiz,
   updateQuiz,
   startQuiz,
+  getUserQuizzes,
 } from "../controllers/quizController.js";
 import {
   addQuestion,
@@ -14,26 +15,39 @@ import { joinQuiz } from "../controllers/participantController.js";
 import {
   submitAnswers,
   getResults,
+  getLastAttemptedQuiz,
+  getGuestQuizResults,
 } from "../controllers/submissionController.js";
 
 const router = express.Router();
 
-// Quiz routes
-router.post("/quizzes", createQuiz);
-router.get("/quizzes/:code", getQuiz);
-router.patch("/quizzes/:code", updateQuiz);
-router.post("/quizzes/:code/start", startQuiz);
+// Middleware to require authentication
+function requireAuth(req, res, next) {
+  if (!req.user) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+  next();
+}
 
-// Question routes
-router.post("/quizzes/:code/questions", addQuestion);
-router.patch("/quizzes/:code/questions/:qid", editQuestion);
-router.delete("/quizzes/:code/questions/:qid", deleteQuestion);
+// Quiz routes
+router.post("/quizzes", requireAuth, createQuiz); // Only logged-in users can create
+router.get("/quizzes/:code", getQuiz); // Anyone can view quiz details
+router.patch("/quizzes/:code", requireAuth, updateQuiz); // Only quiz owner can update
+router.post("/quizzes/:code/start", requireAuth, startQuiz); // Only quiz owner can start
+router.get("/user/quizzes", requireAuth, getUserQuizzes); // Get user's recent quizzes
+
+// Question routes (only quiz owners)
+router.post("/quizzes/:code/questions", requireAuth, addQuestion);
+router.patch("/quizzes/:code/questions/:qid", requireAuth, editQuestion);
+router.delete("/quizzes/:code/questions/:qid", requireAuth, deleteQuestion);
 
 // Participant routes
-router.post("/quizzes/:code/join", joinQuiz);
+router.post("/quizzes/:code/join", joinQuiz); // Anyone can join (with or without auth)
 
 // Submission routes
-router.post("/quizzes/:code/submit", submitAnswers);
-router.get("/quizzes/:code/result", getResults);
+router.post("/quizzes/:code/submit", submitAnswers); // Anyone can submit (participant-based)
+router.get("/quizzes/:code/result", getResults); // Anyone can view results
+router.get("/user/last-attempted", requireAuth, getLastAttemptedQuiz); // Get user's last attempted quiz
+router.post("/guest/quiz-results", getGuestQuizResults); // Get guest quiz results by code + name
 
 export default router;

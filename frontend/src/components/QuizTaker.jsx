@@ -129,10 +129,34 @@ export default function QuizTaker({
     <div className="max-w-2xl mx-auto p-6 rounded bg-white/5">
       <div className="mb-6">
         <h2 className="text-2xl font-bold">{quiz.title}</h2>
-        <p className="text-gray-400 mt-1">{quiz.questions.length} questions</p>
+        <div className="flex justify-between items-center mt-2">
+          <p className="text-gray-400">{quiz.questions.length} questions</p>
+          {quiz.deadline && (
+            <div className="text-right">
+              <p className="text-xs text-gray-400">Deadline:</p>
+              <p className="text-sm text-yellow-400">
+                {new Date(quiz.deadline).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
-      {error && <p className="text-red-400 mb-4">{error}</p>}
+      {error && (
+        <div className="mb-4 p-3 bg-red-900 bg-opacity-50 border border-red-600 rounded-lg">
+          <p className="text-red-300">{error}</p>
+          {error.includes("Deadline passed") && (
+            <p className="text-red-400 text-sm mt-1">
+              The quiz deadline has expired. You can no longer submit answers.
+            </p>
+          )}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {quiz.questions.map((question) => (
@@ -152,28 +176,28 @@ export default function QuizTaker({
             </div>
 
             <div className="space-y-2">
-              {question.type === "single-choice" && (
+              {question.type === "multiple-choice" && (
                 <div>
-                  {question.choices?.map((choice) => (
+                  {question.choices?.map((choice, choiceIndex) => (
                     <label
-                      key={choice.id}
+                      key={choiceIndex}
                       className="flex items-center gap-3 p-2 rounded hover:bg-slate-700 cursor-pointer"
                     >
                       <input
                         type="radio"
                         name={question.id}
-                        value={choice.id}
-                        checked={answers[question.id] === choice.id}
+                        value={choice}
+                        checked={answers[question.id] === choice}
                         onChange={() =>
                           handleAnswerChange(
                             question.id,
-                            choice.id,
-                            "single-choice"
+                            choice,
+                            "multiple-choice"
                           )
                         }
                         className="w-4 h-4"
                       />
-                      <span className="text-gray-200">{choice.label}</span>
+                      <span className="text-gray-200">{choice}</span>
                     </label>
                   ))}
                 </div>
@@ -181,27 +205,25 @@ export default function QuizTaker({
 
               {question.type === "multi-choice" && (
                 <div>
-                  {question.choices?.map((choice) => (
+                  {question.choices?.map((choice, choiceIndex) => (
                     <label
-                      key={choice.id}
+                      key={choiceIndex}
                       className="flex items-center gap-3 p-2 rounded hover:bg-slate-700 cursor-pointer"
                     >
                       <input
                         type="checkbox"
-                        value={choice.id}
-                        checked={(answers[question.id] || []).includes(
-                          choice.id
-                        )}
+                        value={choice}
+                        checked={(answers[question.id] || []).includes(choice)}
                         onChange={() =>
                           handleAnswerChange(
                             question.id,
-                            choice.id,
+                            choice,
                             "multi-choice"
                           )
                         }
                         className="w-4 h-4"
                       />
-                      <span className="text-gray-200">{choice.label}</span>
+                      <span className="text-gray-200">{choice}</span>
                     </label>
                   ))}
                 </div>

@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { createRoom, joinRoom } from "../lib/roomService";
+import { validateQuizTitle, validateUsername } from "../lib/validation";
 
 export default function CreateRoom({ user = null, onCreated, onNeedLogin }) {
   const [title, setTitle] = useState("Quick Quiz");
   const [hostName, setHostName] = useState(user ? user.name : "Host");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
 
   // If user not logged in, show login prompt
   if (!user) {
@@ -33,15 +35,43 @@ export default function CreateRoom({ user = null, onCreated, onNeedLogin }) {
     );
   }
 
+  function validateForm() {
+    const errors = {};
+
+    const titleErrors = validateQuizTitle(title);
+    if (titleErrors.length > 0) {
+      errors.title = titleErrors[0];
+    }
+
+    const nameErrors = validateUsername(hostName);
+    if (nameErrors.length > 0) {
+      errors.hostName = nameErrors[0];
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  }
+
   async function handleCreate(e) {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      const room = await createRoom({ title, hostName });
+      const trimmedTitle = title.trim();
+      const trimmedHostName = hostName.trim();
+
+      const room = await createRoom({
+        title: trimmedTitle,
+        hostName: trimmedHostName,
+      });
       // join host as participant to get participantId
       try {
-        const j = await joinRoom(room.code, hostName, {
+        const j = await joinRoom(room.code, trimmedHostName, {
           useToken: !!user,
         });
         const pid = j.participantId;
@@ -70,18 +100,32 @@ export default function CreateRoom({ user = null, onCreated, onNeedLogin }) {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full mt-1 p-2 rounded bg-slate-800 text-white"
+            className={`w-full mt-1 p-2 rounded bg-slate-800 text-white ${
+              validationErrors.title ? "border-2 border-red-500" : ""
+            }`}
             placeholder="Fun trivia"
           />
+          {validationErrors.title && (
+            <p className="text-red-400 text-sm mt-1">
+              {validationErrors.title}
+            </p>
+          )}
         </div>
         <div>
           <label className="block text-sm text-gray-200">Your name</label>
           <input
             value={hostName}
             onChange={(e) => setHostName(e.target.value)}
-            className="w-full mt-1 p-2 rounded bg-slate-800 text-white"
+            className={`w-full mt-1 p-2 rounded bg-slate-800 text-white ${
+              validationErrors.hostName ? "border-2 border-red-500" : ""
+            }`}
             placeholder="Host"
           />
+          {validationErrors.hostName && (
+            <p className="text-red-400 text-sm mt-1">
+              {validationErrors.hostName}
+            </p>
+          )}
         </div>
         {error && <p className="text-red-400">{error}</p>}
         <div className="flex gap-2">
