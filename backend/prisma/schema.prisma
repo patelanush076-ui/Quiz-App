@@ -1,0 +1,71 @@
+// SQLite Prisma schema for a simple quiz app
+// Run 'npm install', then 'npm run prisma:migrate' to create DB
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Quiz {
+  id        String     @id @default(uuid())
+  code      String     @unique
+  title     String
+  adminName String
+  adminId   String?
+  admin     User?      @relation(fields: [adminId], references: [id])
+  active    Boolean    @default(false)
+  started   Boolean    @default(false)
+  deadline  DateTime?
+  questions Question[]
+  participants Participant[]
+  submissions Submission[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  passwordHash String
+  quizzes      Quiz[]   @relation("admin")
+  participants Participant[]
+  createdAt    DateTime @default(now())
+}
+
+model Question {
+  id       String @id @default(uuid())
+  quizId   String
+  quiz     Quiz   @relation(fields: [quizId], references: [id])
+  order    Int
+  content  String
+  type     String
+  choices  Json?
+  answer   Json?
+  points   Int    @default(1)
+}
+
+model Participant {
+  id         String @id @default(uuid())
+  quizId     String
+  quiz       Quiz   @relation(fields: [quizId], references: [id])
+  userId     String?
+  user       User?  @relation(fields: [userId], references: [id])
+  username   String
+  createdAt  DateTime @default(now())
+  submissions Submission[]
+}
+
+model Submission {
+  id            String @id @default(uuid())
+  participantId String
+  participant   Participant @relation(fields: [participantId], references: [id])
+  quizId        String
+  quiz          Quiz   @relation(fields: [quizId], references: [id])
+  answers       Json
+  score         Int
+  submittedAt   DateTime @default(now())
+}
