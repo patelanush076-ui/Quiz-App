@@ -14,7 +14,9 @@ function generateToken(user) {
 // Sign up
 export const signup = async (req, res) => {
   const { name, password } = req.body;
-  const hash = bcrypt.hashSync(password, 10);
+
+  console.log(req.body);
+
   const user = await prisma.user.create({ data: { name, passwordHash: hash } });
   const token = generateToken(user);
   res.json({ user: { id: user.id, name: user.name }, token });

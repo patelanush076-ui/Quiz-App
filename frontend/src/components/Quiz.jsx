@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getRoom, joinRoom } from "../lib/roomService";
+import { apiFetch } from "../lib/apiClient";
 
 function storageKey(code) {
   return `quiz:${code}:answers`;
@@ -81,14 +82,11 @@ export default function Quiz({ code, participantId, onFinished }) {
           localStorage.setItem("participantId", pid);
         } catch (e) {}
       }
-      const res = await fetch(
-        `http://localhost:4000/api/quizzes/${code}/submit`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ participantId: pid, answers }),
-        }
-      );
+      const res = await apiFetch(`/api/quizzes/${code}/submit`, {
+        method: "POST",
+        body: { participantId: pid, answers },
+        includeAuth: true,
+      });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || "Submission failed");
       setResult({ score: json.score, detail: json.detail });

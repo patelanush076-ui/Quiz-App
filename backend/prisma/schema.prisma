@@ -1,12 +1,12 @@
-// SQLite Prisma schema for a simple quiz app
-// Run 'npm install', then 'npm run prisma:migrate' to create DB
+// PostgreSQL Prisma schema for a quiz app
+// Run 'npm install', then 'npx prisma db push' to sync schema
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -16,7 +16,7 @@ model Quiz {
   title     String
   adminName String
   adminId   String?
-  admin     User?      @relation(fields: [adminId], references: [id])
+  admin     User?      @relation("admin", fields: [adminId], references: [id])
   active    Boolean    @default(false)
   started   Boolean    @default(false)
   deadline  DateTime?
@@ -29,7 +29,7 @@ model Quiz {
 
 model User {
   id           String   @id @default(uuid())
-  name         String
+  name         String 
   passwordHash String
   quizzes      Quiz[]   @relation("admin")
   participants Participant[]

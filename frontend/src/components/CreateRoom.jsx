@@ -1,11 +1,37 @@
 import { useState, useEffect } from "react";
 import { createRoom, joinRoom } from "../lib/roomService";
 
-export default function CreateRoom({ user = null, onCreated }) {
+export default function CreateRoom({ user = null, onCreated, onNeedLogin }) {
   const [title, setTitle] = useState("Quick Quiz");
   const [hostName, setHostName] = useState(user ? user.name : "Host");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // If user not logged in, show login prompt
+  if (!user) {
+    return (
+      <div className="max-w-md mx-auto bg-white/5 p-6 rounded-lg shadow-md text-center">
+        <h2 className="text-xl font-semibold mb-4">Create a Quiz Room</h2>
+        <p className="text-gray-300 mb-6">
+          You must log in or sign up to create a quiz room.
+        </p>
+        <div className="flex gap-2 justify-center">
+          <button
+            onClick={() => onNeedLogin && onNeedLogin("login")}
+            className="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-700"
+          >
+            Login
+          </button>
+          <button
+            onClick={() => onNeedLogin && onNeedLogin("signup")}
+            className="px-4 py-2 rounded bg-rose-600 hover:bg-rose-700"
+          >
+            Sign up
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   async function handleCreate(e) {
     e.preventDefault();

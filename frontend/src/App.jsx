@@ -160,7 +160,11 @@ function App() {
           )}
 
           {view === "create" && (
-            <CreateRoom user={user} onCreated={handleCreated} />
+            <CreateRoom
+              user={user}
+              onCreated={handleCreated}
+              onNeedLogin={(action) => setView(action)}
+            />
           )}
 
           {view === "join" && (

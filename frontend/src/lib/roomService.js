@@ -1,5 +1,6 @@
 // Mock room service using localStorage to emulate backend behavior.
 // This is a simple implementation for development/demo-only.
+import { apiFetch } from "./apiClient.js";
 
 function _getRooms() {
   try {
@@ -30,14 +31,10 @@ function _generateCode(length = 6) {
 export async function createRoom({ hostName = "Host", title = "Quiz" } = {}) {
   // Try backend first
   try {
-    const token = localStorage.getItem("jwt");
-    const res = await fetch("http://localhost:4000/api/quizzes", {
+    const res = await apiFetch("/api/quizzes", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ title, adminName: hostName }),
+      body: { title, adminName: hostName },
+      includeAuth: true,
     });
     if (res.ok) {
       const json = await res.json();
@@ -79,19 +76,17 @@ export async function joinRoom(
   options = { useToken: true }
 ) {
   try {
-    const token = options.useToken ? localStorage.getItem("jwt") : null;
-    const res = await fetch(`http://localhost:4000/api/quizzes/${code}/join`, {
+    const res = await apiFetch(`/api/quizzes/${code}/join`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ username: participantName }),
+      body: { username: participantName },
+      includeAuth: options.useToken,
     });
     const json = await res.json();
     if (res.ok) {
       // return room data from backend to keep consistent API
-      const roomRes = await fetch(`http://localhost:4000/api/quizzes/${code}`);
+      const roomRes = await apiFetch(`/api/quizzes/${code}`, {
+        includeAuth: true,
+      });
       if (roomRes.ok) {
         const rjson = await roomRes.json();
         // map to local format
@@ -132,9 +127,8 @@ export async function joinRoom(
 
 export async function getRoom(code) {
   try {
-    const token = localStorage.getItem("jwt");
-    const res = await fetch(`http://localhost:4000/api/quizzes/${code}`, {
-      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    const res = await apiFetch(`/api/quizzes/${code}`, {
+      includeAuth: true,
     });
     const json = await res.json();
     if (res.ok) {
@@ -158,8 +152,9 @@ export async function getRoom(code) {
 
 export async function startRoom(code) {
   try {
-    const res = await fetch(`http://localhost:4000/api/quizzes/${code}/start`, {
+    const res = await apiFetch(`/api/quizzes/${code}/start`, {
       method: "POST",
+      includeAuth: true,
     });
     const json = await res.json();
     if (res.ok) {
