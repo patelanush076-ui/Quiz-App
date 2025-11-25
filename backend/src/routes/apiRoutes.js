@@ -18,6 +18,7 @@ import {
   getLastAttemptedQuiz,
   getGuestQuizResults,
 } from "../controllers/submissionController.js";
+import { generateQuizWithAI } from "../controllers/aiController.js";
 
 const router = express.Router();
 
@@ -35,6 +36,9 @@ router.get("/quizzes/:code", getQuiz); // Anyone can view quiz details
 router.patch("/quizzes/:code", requireAuth, updateQuiz); // Only quiz owner can update
 router.post("/quizzes/:code/start", requireAuth, startQuiz); // Only quiz owner can start
 router.get("/user/quizzes", requireAuth, getUserQuizzes); // Get user's recent quizzes
+
+// AI routes
+router.post("/ai/generate-quiz", requireAuth, generateQuizWithAI); // Generate quiz with AI
 
 // Question routes (only quiz owners)
 router.post("/quizzes/:code/questions", requireAuth, addQuestion);

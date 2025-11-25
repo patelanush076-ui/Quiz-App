@@ -11,6 +11,7 @@
     "prisma:studio": "npx prisma studio"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.2.1",
     "@prisma/client": "^5.12.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
