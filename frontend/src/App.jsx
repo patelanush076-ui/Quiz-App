@@ -12,10 +12,12 @@ import RecentQuizzes from "./components/RecentQuizzes";
 import LastAttemptedQuiz from "./components/LastAttemptedQuiz";
 import QuizResultsView from "./components/QuizResultsView";
 import GuestResultsLookup from "./components/GuestResultsLookup";
+import AIQuizGenerator from "./components/AIQuizGenerator";
+import AIQuizPreview from "./components/AIQuizPreview";
 import authService from "./lib/authService";
 
 function App() {
-  const [view, setView] = useState("home"); // 'home' | 'create' | 'join' | 'room' | 'login' | 'signup' | 'quiz-taker' | 'result' | 'quiz-builder' | 'quiz-dashboard' | 'quiz-results' | 'guest-results'
+  const [view, setView] = useState("home"); // 'home' | 'create' | 'join' | 'room' | 'login' | 'signup' | 'quiz-taker' | 'result' | 'quiz-builder' | 'quiz-dashboard' | 'quiz-results' | 'guest-results' | 'ai-quiz-generator' | 'ai-quiz-preview'
   const [currentRoom, setCurrentRoom] = useState(null);
   const [currentName, setCurrentName] = useState(null);
   const [currentParticipantId, setCurrentParticipantId] = useState(null);
@@ -25,6 +27,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [quizResult, setQuizResult] = useState(null);
   const [currentQuiz, setCurrentQuiz] = useState(null);
+  const [aiQuizData, setAiQuizData] = useState(null);
 
   function handleCreated(room, participantId) {
     setCurrentRoom(room);
@@ -96,6 +99,31 @@ function App() {
     setCurrentName(null);
     setCurrentQuiz(null);
     setQuizResult(null);
+    setAiQuizData(null);
+  }
+
+  function handleAIQuizGenerated(quizData) {
+    setAiQuizData(quizData);
+    setView("ai-quiz-preview");
+  }
+
+  function handleAIQuizAccepted(finalQuizData) {
+    // Convert AI quiz data to QuizBuilder format
+    const quizBuilderData = {
+      title: finalQuizData.title,
+      adminName: user.name,
+      deadline: "",
+      questions: finalQuizData.questions.map((q) => ({
+        content: q.content,
+        type: q.type,
+        choices: q.choices,
+        correctAnswer: q.choices.indexOf(q.correctAnswer),
+        points: q.points || 1,
+      })),
+    };
+
+    setCurrentQuiz(quizBuilderData);
+    setView("quiz-builder");
   }
 
   useEffect(() => {
@@ -186,6 +214,12 @@ function App() {
                       className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium text-lg"
                     >
                       Create New Quiz
+                    </button>
+                    <button
+                      onClick={() => setView("ai-quiz-generator")}
+                      className="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-lg font-medium text-lg flex items-center gap-2"
+                    >
+                      🤖 Create with AI
                     </button>
                     <button
                       onClick={() => setView("join")}
@@ -334,6 +368,23 @@ function App() {
             <QuizBuilder
               user={user}
               onQuizCreated={handleQuizCreated}
+              onCancel={goHome}
+              initialQuiz={currentQuiz}
+            />
+          )}
+
+          {view === "ai-quiz-generator" && (
+            <AIQuizGenerator
+              onQuizGenerated={handleAIQuizGenerated}
+              onCancel={goHome}
+            />
+          )}
+
+          {view === "ai-quiz-preview" && aiQuizData && (
+            <AIQuizPreview
+              aiQuizData={aiQuizData}
+              onAccept={handleAIQuizAccepted}
+              onRegenerate={() => setView("ai-quiz-generator")}
               onCancel={goHome}
             />
           )}

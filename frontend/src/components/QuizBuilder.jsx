@@ -2,12 +2,19 @@ import { useState, useEffect } from "react";
 import { validateQuizTitle, validateUsername } from "../lib/validation";
 import { apiFetch } from "../lib/apiClient";
 
-export default function QuizBuilder({ user, onQuizCreated, onCancel }) {
-  const [quiz, setQuiz] = useState({
-    title: "",
-    deadline: "",
-    questions: [],
-  });
+export default function QuizBuilder({
+  user,
+  onQuizCreated,
+  onCancel,
+  initialQuiz,
+}) {
+  const [quiz, setQuiz] = useState(
+    initialQuiz || {
+      title: "",
+      deadline: "",
+      questions: [],
+    }
+  );
   const [currentQuestion, setCurrentQuestion] = useState({
     content: "",
     type: "multiple-choice",
@@ -19,6 +26,13 @@ export default function QuizBuilder({ user, onQuizCreated, onCancel }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [validationErrors, setValidationErrors] = useState({});
+
+  // Initialize quiz data from props
+  useEffect(() => {
+    if (initialQuiz) {
+      setQuiz(initialQuiz);
+    }
+  }, [initialQuiz]);
 
   if (!user) {
     return (
@@ -192,7 +206,16 @@ export default function QuizBuilder({ user, onQuizCreated, onCancel }) {
   return (
     <div className="max-w-4xl mx-auto bg-white/5 p-6 rounded-lg shadow-md">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold">Create Quiz</h2>
+        <div>
+          <h2 className="text-2xl font-semibold flex items-center gap-2">
+            {initialQuiz ? "🤖 Review AI Quiz" : "Create Quiz"}
+          </h2>
+          {initialQuiz && (
+            <p className="text-sm text-purple-300 mt-1">
+              AI-generated quiz ready for review and customization
+            </p>
+          )}
+        </div>
         <button
           onClick={onCancel}
           className="px-4 py-2 rounded bg-gray-600 hover:bg-gray-700"
