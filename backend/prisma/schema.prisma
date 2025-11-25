@@ -29,7 +29,7 @@ model Quiz {
 
 model User {
   id           String   @id @default(uuid())
-  name         String 
+  name         String   @unique
   passwordHash String
   quizzes      Quiz[]   @relation("admin")
   participants Participant[]
