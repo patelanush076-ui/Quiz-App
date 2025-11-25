@@ -73,7 +73,11 @@ export async function createRoom({ hostName = "Host", title = "Quiz" } = {}) {
   return room;
 }
 
-export async function joinRoom(code, participantName = "Player", options = { useToken: true }) {
+export async function joinRoom(
+  code,
+  participantName = "Player",
+  options = { useToken: true }
+) {
   try {
     const token = options.useToken ? localStorage.getItem("jwt") : null;
     const res = await fetch(`http://localhost:4000/api/quizzes/${code}/join`, {

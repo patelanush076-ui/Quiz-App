@@ -92,7 +92,9 @@ function App() {
             </button>
             {user ? (
               <>
-                <span className="px-3 py-1 rounded bg-slate-700">{user.name}</span>
+                <span className="px-3 py-1 rounded bg-slate-700">
+                  {user.name}
+                </span>
                 <button
                   className="px-3 py-1 rounded bg-red-600"
                   onClick={handleLogout}

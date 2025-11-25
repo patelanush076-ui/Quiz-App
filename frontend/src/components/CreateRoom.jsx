@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createRoom, joinRoom } from "../lib/roomService";
 
 export default function CreateRoom({ user = null, onCreated }) {
   const [title, setTitle] = useState("Quick Quiz");
-  const [hostName, setHostName] = useState("Host");
+  const [hostName, setHostName] = useState(user ? user.name : "Host");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -29,6 +29,11 @@ export default function CreateRoom({ user = null, onCreated }) {
       setLoading(false);
     }
   }
+
+  // keep hostName in sync with user when provided
+  useEffect(() => {
+    if (user) setHostName(user.name);
+  }, [user]);
 
   return (
     <div className="max-w-md mx-auto bg-white/5 p-6 rounded-lg shadow-md">

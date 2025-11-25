@@ -70,9 +70,13 @@ export default function Quiz({ code, participantId, onFinished }) {
       if (!pid) {
         // try to join as guest
         try {
-          const resj = await joinRoom(code, "Guest" + Math.floor(Math.random() * 10000), {
-            useToken: !!localStorage.getItem("jwt"),
-          });
+          const resj = await joinRoom(
+            code,
+            "Guest" + Math.floor(Math.random() * 10000),
+            {
+              useToken: !!localStorage.getItem("jwt"),
+            }
+          );
           pid = resj.participantId;
           localStorage.setItem("participantId", pid);
         } catch (e) {}
