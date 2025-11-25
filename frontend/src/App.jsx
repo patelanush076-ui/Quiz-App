@@ -5,16 +5,18 @@ import Login from "./components/Login";
 import Signup from "./components/Signup";
 import Room from "./components/Room";
 import Quiz from "./components/Quiz";
+import QuizTaker from "./components/QuizTaker";
 import authService from "./lib/authService";
 
 function App() {
-  const [view, setView] = useState("home"); // 'home' | 'create' | 'join' | 'room' | 'login' | 'signup'
+  const [view, setView] = useState("home"); // 'home' | 'create' | 'join' | 'room' | 'login' | 'signup' | 'quiz-taker' | 'result'
   const [currentRoom, setCurrentRoom] = useState(null);
   const [currentName, setCurrentName] = useState(null);
   const [currentParticipantId, setCurrentParticipantId] = useState(null);
   const [initialJoinCode, setInitialJoinCode] = useState("");
   const [initialJoinName, setInitialJoinName] = useState("");
   const [user, setUser] = useState(null);
+  const [quizResult, setQuizResult] = useState(null);
 
   function handleCreated(room, participantId) {
     setCurrentRoom(room);
@@ -40,12 +42,23 @@ function App() {
     try {
       localStorage.setItem("participantId", participantId || "");
     } catch (e) {}
-    setView("room");
+    // Direct to quiz-taker view after joining
+    setView("quiz-taker");
     try {
       window.history.replaceState(null, "", `?code=${room.code}&name=${name}`);
     } catch (e) {
       /* ignore */
     }
+  }
+
+  function handleQuizSubmitted(result) {
+    setQuizResult(result);
+    setView("result");
+  }
+
+  function backToHome() {
+    goHome();
+    setQuizResult(null);
   }
 
   function handleLogin(user) {
@@ -208,6 +221,38 @@ function App() {
                 participantId={currentParticipantId}
                 onFinished={() => setView("room")}
               />
+            </div>
+          )}
+
+          {view === "quiz-taker" && currentRoom && currentParticipantId && (
+            <QuizTaker
+              code={currentRoom.code}
+              participantId={currentParticipantId}
+              onSubmitted={handleQuizSubmitted}
+              onCancel={backToHome}
+            />
+          )}
+
+          {view === "result" && quizResult && (
+            <div className="max-w-2xl mx-auto p-6 rounded bg-white/5">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold mb-4">Quiz Submitted!</h2>
+                <p className="text-2xl text-emerald-400 mb-6">
+                  Your Score: {quizResult.score}
+                </p>
+                <div className="bg-slate-800 p-4 rounded mb-6 text-left">
+                  <h3 className="font-semibold mb-3">Results:</h3>
+                  <pre className="text-sm overflow-auto max-h-64">
+                    {JSON.stringify(quizResult.detail, null, 2)}
+                  </pre>
+                </div>
+                <button
+                  onClick={backToHome}
+                  className="px-6 py-2 rounded bg-indigo-600 hover:bg-indigo-700"
+                >
+                  Back to Home
+                </button>
+              </div>
             </div>
           )}
         </main>
