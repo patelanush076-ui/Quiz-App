@@ -56,6 +56,7 @@ app.use("/api/auth", authRoutes);
 // Health check
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 
-app.listen(4000, () => console.log("Backend running on http://localhost:4000"));
+// app.listen(4000, () => console.log("Backend running on http://localhost:4000"));
+export default app;
 
 export { requireAuth };
