@@ -3,7 +3,7 @@ import { validateUsername, validatePassword } from "./validation.js";
 
 const KEY_TOKEN = "jwt";
 const KEY_USER = "user";
-const API_BASE = "http://localhost:4000";
+const API_BASE = import.meta.env.VITE_API_URL;
 
 export async function signup(name, password) {
   // Validate input
