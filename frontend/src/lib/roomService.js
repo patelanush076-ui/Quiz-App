@@ -98,6 +98,7 @@ export async function joinRoom(
             host: quiz.adminName,
             participants: [],
             started: quiz.started,
+            deadline: quiz.deadline,
           },
           participantId: json.participant ? json.participant.id : undefined,
         };
@@ -139,6 +140,7 @@ export async function getRoom(code) {
         host: q.adminName,
         participants: q.participants || [],
         started: q.started,
+        deadline: q.deadline,
         questions: q.questions,
       };
     }

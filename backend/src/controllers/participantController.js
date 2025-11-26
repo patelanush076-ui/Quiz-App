@@ -11,6 +11,14 @@ export const joinQuiz = async (req, res) => {
   if (!quiz) return res.status(404).json({ message: "Quiz not found" });
   if (!quiz.active) return res.status(400).json({ message: "Quiz not active" });
 
+  // Check if deadline has passed
+  if (quiz.deadline && new Date(quiz.deadline) < new Date()) {
+    return res.status(400).json({
+      message: "Cannot join quiz - deadline has passed",
+      deadline: quiz.deadline,
+    });
+  }
+
   // If user is logged in, link their account
   const data = {
     quizId: quiz.id,

@@ -149,10 +149,11 @@ export default function Quiz({ code, participantId, onFinished }) {
   if (status === "done" && result) {
     return (
       <div className="max-w-2xl mx-auto p-6 rounded bg-white/5">
-        <h3 className="text-xl">Submitted — Your score: {result.score}</h3>
+        <h3 className="text-xl font-semibold">Quiz Submitted!</h3>
+        {/* <h3 className="text-xl">Submitted — Your score: {result.score}</h3>
         <pre className="text-sm mt-3 bg-slate-800 p-3 rounded">
           {JSON.stringify(result.detail, null, 2)}
-        </pre>
+        </pre> */}
         <div className="mt-4">
           <button
             onClick={onFinished}

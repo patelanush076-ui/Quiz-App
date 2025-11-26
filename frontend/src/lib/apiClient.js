@@ -35,4 +35,57 @@ export async function apiFetch(endpoint, options = {}) {
   return response;
 }
 
-export default { apiFetch, getHeaders };
+export async function getUserQuizzes() {
+  try {
+    const response = await apiFetch("/api/user/quizzes");
+    if (response.ok) {
+      return await response.json();
+    }
+    throw new Error("Failed to fetch quizzes");
+  } catch (error) {
+    console.error("Error fetching user quizzes:", error);
+    throw error;
+  }
+}
+
+export async function getLastAttemptedQuiz() {
+  try {
+    const response = await apiFetch("/api/user/last-attempted");
+    if (response.ok) {
+      return await response.json();
+    }
+    throw new Error("Failed to fetch last attempted quiz");
+  } catch (error) {
+    console.error("Error fetching last attempted quiz:", error);
+    throw error;
+  }
+}
+
+export async function getGuestQuizResults(quizCode, participantName) {
+  try {
+    const response = await apiFetch("/api/guest/quiz-results", {
+      method: "POST",
+      body: {
+        code: quizCode,
+        participantName: participantName,
+      },
+      includeAuth: false,
+    });
+    if (response.ok) {
+      return await response.json();
+    }
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to fetch guest quiz results");
+  } catch (error) {
+    console.error("Error fetching guest quiz results:", error);
+    throw error;
+  }
+}
+
+export default {
+  apiFetch,
+  getHeaders,
+  getUserQuizzes,
+  getLastAttemptedQuiz,
+  getGuestQuizResults,
+};

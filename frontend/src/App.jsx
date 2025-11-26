@@ -6,17 +6,28 @@ import Signup from "./components/Signup";
 import Room from "./components/Room";
 import Quiz from "./components/Quiz";
 import QuizTaker from "./components/QuizTaker";
+import QuizBuilder from "./components/QuizBuilder";
+import QuizDashboard from "./components/QuizDashboard";
+import RecentQuizzes from "./components/RecentQuizzes";
+import LastAttemptedQuiz from "./components/LastAttemptedQuiz";
+import QuizResultsView from "./components/QuizResultsView";
+import GuestResultsLookup from "./components/GuestResultsLookup";
+import AIQuizGenerator from "./components/AIQuizGenerator";
+import AIQuizPreview from "./components/AIQuizPreview";
 import authService from "./lib/authService";
 
 function App() {
-  const [view, setView] = useState("home"); // 'home' | 'create' | 'join' | 'room' | 'login' | 'signup' | 'quiz-taker' | 'result'
+  const [view, setView] = useState("home"); // 'home' | 'create' | 'join' | 'room' | 'login' | 'signup' | 'quiz-taker' | 'result' | 'quiz-builder' | 'quiz-dashboard' | 'quiz-results' | 'guest-results' | 'ai-quiz-generator' | 'ai-quiz-preview'
   const [currentRoom, setCurrentRoom] = useState(null);
   const [currentName, setCurrentName] = useState(null);
   const [currentParticipantId, setCurrentParticipantId] = useState(null);
   const [initialJoinCode, setInitialJoinCode] = useState("");
   const [initialJoinName, setInitialJoinName] = useState("");
+  const [lastAttemptedQuiz, setLastAttemptedQuiz] = useState(null);
   const [user, setUser] = useState(null);
   const [quizResult, setQuizResult] = useState(null);
+  const [currentQuiz, setCurrentQuiz] = useState(null);
+  const [aiQuizData, setAiQuizData] = useState(null);
 
   function handleCreated(room, participantId) {
     setCurrentRoom(room);
@@ -66,15 +77,53 @@ function App() {
     setView("home");
   }
 
-  function handleLogout() {
-    setUser(null);
-    authService.logout();
+  async function handleLogout() {
+    try {
+      await authService.logout();
+    } catch (e) {
+      console.warn("Logout error:", e);
+    } finally {
+      setUser(null);
+      setView("home");
+    }
+  }
+
+  function handleQuizCreated(quiz) {
+    setCurrentQuiz(quiz);
+    setView("quiz-dashboard");
   }
 
   function goHome() {
     setView("home");
     setCurrentRoom(null);
     setCurrentName(null);
+    setCurrentQuiz(null);
+    setQuizResult(null);
+    setAiQuizData(null);
+  }
+
+  function handleAIQuizGenerated(quizData) {
+    setAiQuizData(quizData);
+    setView("ai-quiz-preview");
+  }
+
+  function handleAIQuizAccepted(finalQuizData) {
+    // Convert AI quiz data to QuizBuilder format
+    const quizBuilderData = {
+      title: finalQuizData.title,
+      adminName: user.name,
+      deadline: "",
+      questions: finalQuizData.questions.map((q) => ({
+        content: q.content,
+        type: q.type,
+        choices: q.choices,
+        correctAnswer: q.choices.indexOf(q.correctAnswer),
+        points: q.points || 1,
+      })),
+    };
+
+    setCurrentQuiz(quizBuilderData);
+    setView("quiz-builder");
   }
 
   useEffect(() => {
@@ -133,9 +182,11 @@ function App() {
             )}
             <button
               className="px-3 py-1 rounded bg-indigo-600"
-              onClick={() => setView("create")}
+              onClick={() =>
+                user ? setView("quiz-builder") : setView("login")
+              }
             >
-              Create
+              {user ? "Create Quiz" : "Create"}
             </button>
             <button
               className="px-3 py-1 rounded bg-green-600"
@@ -149,26 +200,83 @@ function App() {
         <main>
           {view === "home" && (
             <div className="text-center space-y-6">
-              <h2 className="text-3xl font-semibold">
-                Create or Join a Quiz Room
-              </h2>
+              <h2 className="text-3xl font-semibold">Welcome to Quiz App</h2>
               <p className="text-gray-300">
-                Create a room and share the code with others to join.
+                {user
+                  ? `Hello ${user.name}! Create engaging quizzes with deadlines and questions, or join existing quizzes.`
+                  : "Create engaging quizzes with deadlines, share them with participants, and view results after completion."}
               </p>
-              <div className="flex justify-center gap-3">
-                <button
-                  onClick={() => setView("create")}
-                  className="px-6 py-3 bg-indigo-600 rounded"
-                >
-                  Create Room
-                </button>
-                <button
-                  onClick={() => setView("join")}
-                  className="px-6 py-3 bg-green-600 rounded"
-                >
-                  Join Room
-                </button>
+              <div className="flex justify-center gap-3 flex-wrap">
+                {user ? (
+                  <>
+                    <button
+                      onClick={() => setView("quiz-builder")}
+                      className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium text-lg"
+                    >
+                      Create New Quiz
+                    </button>
+                    <button
+                      onClick={() => setView("ai-quiz-generator")}
+                      className="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-lg font-medium text-lg flex items-center gap-2"
+                    >
+                      🤖 Create with AI
+                    </button>
+                    <button
+                      onClick={() => setView("join")}
+                      className="px-8 py-4 bg-green-600 hover:bg-green-700 rounded-lg font-medium text-lg"
+                    >
+                      Join Quiz
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setView("login")}
+                      className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium text-lg"
+                    >
+                      Login to Create Quiz
+                    </button>
+                    <button
+                      onClick={() => setView("join")}
+                      className="px-8 py-4 bg-green-600 hover:bg-green-700 rounded-lg font-medium text-lg"
+                    >
+                      Join Quiz
+                    </button>
+                    <button
+                      onClick={() => setView("guest-results")}
+                      className="px-8 py-4 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium text-lg"
+                    >
+                      Check My Results
+                    </button>
+                  </>
+                )}
               </div>
+
+              {user && (
+                <div className="mt-12 max-w-6xl mx-auto space-y-12">
+                  <LastAttemptedQuiz
+                    onViewResults={(quizData) => {
+                      setLastAttemptedQuiz(quizData);
+                      setView("quiz-results");
+                    }}
+                    onViewAnalytics={(quizData) => {
+                      setCurrentQuiz(quizData.quiz);
+                      setView("quiz-dashboard");
+                    }}
+                  />
+
+                  <RecentQuizzes
+                    onViewDashboard={(quiz) => {
+                      setCurrentQuiz(quiz);
+                      setView("quiz-dashboard");
+                    }}
+                    onViewAnalytics={(quiz) => {
+                      setCurrentQuiz(quiz);
+                      setView("quiz-dashboard");
+                    }}
+                  />
+                </div>
+              )}
             </div>
           )}
 
@@ -253,6 +361,65 @@ function App() {
                   Back to Home
                 </button>
               </div>
+            </div>
+          )}
+
+          {view === "quiz-builder" && (
+            <QuizBuilder
+              user={user}
+              onQuizCreated={handleQuizCreated}
+              onCancel={goHome}
+              initialQuiz={currentQuiz}
+            />
+          )}
+
+          {view === "ai-quiz-generator" && (
+            <AIQuizGenerator
+              onQuizGenerated={handleAIQuizGenerated}
+              onCancel={goHome}
+            />
+          )}
+
+          {view === "ai-quiz-preview" && aiQuizData && (
+            <AIQuizPreview
+              aiQuizData={aiQuizData}
+              onAccept={handleAIQuizAccepted}
+              onRegenerate={() => setView("ai-quiz-generator")}
+              onCancel={goHome}
+            />
+          )}
+
+          {view === "quiz-dashboard" && currentQuiz && (
+            <QuizDashboard quiz={currentQuiz} user={user} onBack={goHome} />
+          )}
+
+          {view === "quiz-results" && lastAttemptedQuiz && (
+            <QuizResultsView
+              quizData={lastAttemptedQuiz}
+              onBack={() => {
+                setLastAttemptedQuiz(null);
+                setView("home");
+              }}
+            />
+          )}
+
+          {view === "guest-results" && (
+            <div className="max-w-2xl mx-auto">
+              <div className="flex items-center gap-4 mb-6">
+                <button
+                  onClick={() => setView("home")}
+                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-white"
+                >
+                  ← Back to Home
+                </button>
+              </div>
+
+              <GuestResultsLookup
+                onViewResults={(quizData) => {
+                  setLastAttemptedQuiz(quizData);
+                  setView("quiz-results");
+                }}
+              />
             </div>
           )}
         </main>

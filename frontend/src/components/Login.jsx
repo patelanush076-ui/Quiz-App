@@ -1,14 +1,37 @@
 import { useState } from "react";
 import authService from "../lib/authService";
+import { validateUsername } from "../lib/validation";
 
 export default function Login({ onLoggedIn }) {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [validationErrors, setValidationErrors] = useState({});
+
+  function validateForm() {
+    const errors = {};
+
+    const nameErrors = validateUsername(name);
+    if (nameErrors.length > 0) {
+      errors.name = nameErrors[0];
+    }
+
+    if (!password) {
+      errors.password = "Password is required";
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  }
 
   async function handleLogin(e) {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
     setError("");
     try {
@@ -30,9 +53,14 @@ export default function Login({ onLoggedIn }) {
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full mt-1 p-2 rounded bg-slate-800 text-white"
+            className={`w-full mt-1 p-2 rounded bg-slate-800 text-white ${
+              validationErrors.name ? "border-2 border-red-500" : ""
+            }`}
             placeholder="Your name"
           />
+          {validationErrors.name && (
+            <p className="text-red-400 text-sm mt-1">{validationErrors.name}</p>
+          )}
         </div>
         <div>
           <label className="block text-sm text-gray-200">Password</label>
@@ -40,9 +68,16 @@ export default function Login({ onLoggedIn }) {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full mt-1 p-2 rounded bg-slate-800 text-white"
+            className={`w-full mt-1 p-2 rounded bg-slate-800 text-white ${
+              validationErrors.password ? "border-2 border-red-500" : ""
+            }`}
             placeholder="Password"
           />
+          {validationErrors.password && (
+            <p className="text-red-400 text-sm mt-1">
+              {validationErrors.password}
+            </p>
+          )}
         </div>
         {error && <p className="text-red-400">{error}</p>}
         <div>
